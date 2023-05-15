@@ -128,7 +128,7 @@
             }
 			var zorluk=0.1; //zorluk seviyesini ayarlamak için bir değişken belirliyorum
 			bilgisayar.y +=(top_.y-(bilgisayar.y+bilgisayar.h/2)) * zorluk; //bu satırda bilgisayarın dikdörtgeninin y noktasının topun y noktasına göre ayarlanmasını sağlıyorum bu sayede bilgisayarın dikdörtgeni topu takip edecek
-			if(oyuncu.score<5 && saniye>180){ //bu if bloğu ile kaybetme durumunu kontrol ediyorum eğer oyuncu skoru 5 ten küçükse ve 3 dakika süre dolduysa bu if bloğu çalışacak
+			if(oyuncu.score<5 && saniye<0){ //bu if bloğu ile kaybetme durumunu kontrol ediyorum eğer oyuncu skoru 5 ten küçükse ve 3 dakika süre dolduysa bu if bloğu çalışacak
 			yazıyazma("KAYBETTİNİZ",alan.width/2-150,240,"#ff0000"); //burada yazıyazma fonksiyonunu çağırıp gerekli parametleri verip oyuncuya kaybettiğini belirtiyorum
 			oyuncu.h=0; //oyun bittiği için oyuncunun dikdörtgeninin kalınlığını ve uzunluğunu 0'lıyorum
 			oyuncu.w=0
