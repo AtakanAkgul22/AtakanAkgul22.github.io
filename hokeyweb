@@ -1,0 +1,199 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>JSPROJE</title>
+</head>
+<body style="background-color: #211B3F"> <!-- Buradaki css kodu ile sayfamın arka plan rengini oluşturuyorum. -->
+	<canvas id="alan" width="1500" height="480" style="border:1px solid;"></canvas><!-- Oyunumda kullanmak için gerekli olacak canvasımı oluşturuyorum-->
+	<script> //js kodlarımı yazacağım script tagini açıyorum
+		var alan=document.getElementById("alan"); 
+		var cizim=alan.getContext("2d"); 
+		function dikdörtgen(x,y,w,h,color){ //arka plan,orta çizgi gibi şeyleri oluşturacağım dikdörtgen fonksiyonumu oluşturuyorum
+			cizim.fillStyle=color; //aldığım color parametresini dikdörtgenimin rengi olarak ayarlıyorum
+			cizim.fillStyle=color; //aldığım color parametresini dikdörtgenimin rengi olarak ayarlıyorum
+			cizim.fillRect(x,y,w,h); //fillrect fonksiyonuna aldığım parametleri vererek bir dikdörtgen oluşturmasını sağlıyorum
+		}
+		var saniye = 180; //oyunu kazanamak için 3 dakikam olduğundan saniye adlı değişken oluşturup 180 değerini veriyorum
+		setInterval(function() { //buradaki setinterval fonksiyonu ile her saniye saniye değişkenimin 1 azalmasını sağlıyorum
+    		saniye--;
+		}, 1000);
+
+
+		
+		function daire(x,y,a,b,c,color){ //orta nokta,oyun topu gibi şeyleri oluşturacağım daire fonksiyonumu oluşturuyorum
+    		cizim.beginPath(); 
+    		cizim.fillStyle=color;//aldığım color parametresini dairemin rengi olarak ayarlıyorum
+			cizim.arc(x,y,a,b,c);//arc fonksiyonuna aldığım parametleri vererek bir daire oluşturuyorum
+			cizim.closePath(); 
+    		cizim.fill(); 
+		}
+		function bosdaire(x,y,a,b,c,width,color){ //oyun alanının ortasındaki boş daireyi oluşturacağım fonksiyonu oluşturuyorum
+    		cizim.beginPath();
+   	 		cizim.strokeStyle=color;//aldığım color parametresini dairemin rengi olarak ayarlıyorum
+    		cizim.lineWidth=width;//genişlik için aldığım parametreyi atıyorum.
+			cizim.arc(x,y,a,b,c);//arc fonksiyonuna aldığım parametleri vererek bir daire oluşturuyorum
+			cizim.closePath();
+			cizim.stroke();//dairemin içi boş olduğundan fill değil stroke fonksiyonunu çağırıyorum
+		}
+		function yazıyazma(yazı,x,y,color){ //skoru,kalan süreyi,kazanma kaybetme durumunda ekrana yazı yazdırabileceğim fonksiyonu yazıyorum.
+			cizim.fillStyle=color;//aldığım color parametresini yazımın rengi olarak ayarlıyorum
+			cizim.font="40px Times New Roman";//yazımın büyüklüğünü ve fontunu ayarlıyorum
+			cizim.fillText(yazı,x,y);//filltext fonksiyonuna aldığım parametleri vererek bir yazı oluşturuyorum
+		}
+		var oyuncu = {  //oyuncu değişkenini oluşturup içinde gerekli şeyleri tanımlıyorum oyuncuyu dikdörtgen fonksiyonu kullanarak oluşturmamamın sebebi sonradan içindeki değerler üzerinde değişilik yapacak olmam örneğin skor,h,x,y gibi
+			score: 0,
+			w:10,
+			h:100,
+			renk:"#808080",
+			x: alan.width/2,
+            y: alan.height/2,
+		};
+		
+		var top_ = { //top değişkenini oluşturup içinde gerekli şeyleri tanımlıyorum top değişkenini daire fonksiyonu kullanarak oluşturmamın nedeni x,y ve hız değerlerinin sürekli değişecek olması
+            x: alan.width/2,
+            y: alan.height/2,
+            r: 15,
+            yatayhiz: 4,
+            dikeyhiz: 4,
+            renk: "#ff0000"
+        };
+		
+		var bilgisayar={ //bilgisayar değişkenini oluşturup içinde gerekli şeyleri tanımlıyorum bilgisayarı dikdörtgen fonksiyonu kullanarak oluşturmamamın sebebi sürekli olarak topun y değerine göre kendi y değerini değiştirecek olması yani topu takip etmesi.
+			x: alan.width-30,
+            y: alan.height/2-50,
+            w:10,
+            h:100,
+            renk: "#808080",
+		};
+		
+		function sıfırla(){ //sıfırla fonksiyonu ile oyuncu gol attıktan ya da gol yedikten sonra topun orta noktada başlaması için x ve y noktasını ayarlıyorum
+			top_.x=alan.width/2;
+			top_.y=alan.width/2;
+		}
+        function hareketEt() { //hareketet fonksiyonu içerisinde topun gol olma durumunu,hızını arttırmayı,gole bağlı olarak uzunluğunun azalıp,artmasını,oyunun zorluğunu,bitip bitmeme durumunu kontrol ediyorum
+            top_.x += top_.yatayhiz;
+            top_.y += top_.dikeyhiz;
+
+            if (top_.x + top_.r > oyuncu.x && top_.x - top_.r < oyuncu.x + oyuncu.w && top_.y + top_.r > oyuncu.y && top_.y - top_.r < oyuncu.y + oyuncu.h) { //buradaki if bloğu ile oyuncunun dikdörtgeni ile topun çarpışma durumunu kontrol ediyorum.
+                if (top_.x < oyuncu.x) {
+                    top_.x = oyuncu.x - top_.r;
+					top_.yatayhiz+=0.9; //topun çarpışma durumunda yatay ve dikey hızını arttırıyorum
+					top_.dikeyhiz+=0.9;
+                } else {
+                    top_.x = oyuncu.x + oyuncu.w + top_.r;
+                }
+                top_.yatayhiz = -top_.yatayhiz; //çarpışmadan sonra topun yön değiştirmesi için yatayhızını tersine çeviriyorum
+            }
+            
+            if (top_.x + top_.r > bilgisayar.x && top_.x - top_.r < bilgisayar.x + bilgisayar.w && top_.y + top_.r > bilgisayar.y && top_.y - top_.r < bilgisayar.y + bilgisayar.h) { //buradaki if bloğu ile bilgisayarın dikdörtgeni ile topun çarpışma durumunu kontrol ediyorum.
+                if (top_.x < bilgisayar.x) {
+                    top_.x = bilgisayar.x - top_.r;
+					top_.yatayhiz+=0.9; //topun çarpışma durumunda yatay ve dikey hızını arttırıyorum
+					top_.dikeyhiz+=0.9;
+                } 
+                else {
+                    top_.x = bilgisayar.x + bilgisayar.w + top_.r;
+                }
+                top_.yatayhiz = -top_.yatayhiz;//çarpışmadan sonra topun yön değiştirmesi için yatayhızını tersine çeviriyorum
+            }
+            
+            if (top_.x + top_.r > alan.width) { //burada gol olma durumunu kontrol ediyorum eğer oyuncu gol atarsa bu if bloğu çalışacak
+                oyuncu.score += 1; //gol atıldığı için oyuncunun skorunu 1 arttırıyorum
+				if(oyuncu.h<100) // oyuncu gol attıktan sonra belirlediğim max uzunluk 100 olduğundan eğer oyuncunun dikdörtgeninin uzunluğu 100 den azsa ise 10 birim arttırıyorum
+					oyuncu.h+=10;
+				top_.yatayhiz=4; //golden sonra topun yatay ve dikey hızını başlangıç haline getiriyorum
+				top_.dikeyhiz=4;
+                sıfırla();
+            }
+            
+            if (top_.x - top_.r < 0) { //burada oyuncunun gol yeme durumunu kontrol ediyorum eğer oyuncu gol yerse bu if bloğu çalışacak
+				if(oyuncu.score>0) //belirlediğim kurala göre oyuncunun skoru - ye düşemeyeceği için skoru 0 dan büyükse gol yediği için 1 azaltıyorum
+					oyuncu.score-=1;
+				if(oyuncu.h>40) //belirlediğim kurala göre oyuncu dikdörtgenin uzunluğu 40 birimden aşağı düşemeyeceği için uzunluğu 40 birimden büyük ise gol yediğinden dolayı 10 birim düşürüyorum
+					oyuncu.h-=10;
+				top_.yatayhiz=4; //golden sonra topun yatay ve dikey hızını başlangıç haline getiriyorum
+				top_.dikeyhiz=4;
+                sıfırla();
+            }
+            
+            if (top_.y + top_.r > alan.height) { //buradaki if bloğu top oyun alanından yukarı gitmeye çalıştığı zaman çalışacak  ve topun dikey hızını tersine çevirerek topun yukardan sekmesini sağlayacak
+                top_.y = alan.height - top_.r;
+                top_.dikeyhiz = -top_.dikeyhiz;
+            }
+			 
+            if (top_.y - top_.r < 0) {//buradaki if bloğu top oyun alanından aşağı gitmeye çalıştığı zaman çalışacak  ve topun dikey hızını tersine çevirerek topun aşağıdan sekmesini sağlayacak
+                top_.y = top_.r;
+                top_.dikeyhiz = -top_.dikeyhiz;
+            }
+			var zorluk=0.1; //zorluk seviyesini ayarlamak için bir değişken belirliyorum
+			bilgisayar.y +=(top_.y-(bilgisayar.y+bilgisayar.h/2)) * zorluk; //bu satırda bilgisayarın dikdörtgeninin y noktasının topun y noktasına göre ayarlanmasını sağlıyorum bu sayede bilgisayarın dikdörtgeni topu takip edecek
+			if(oyuncu.score<5 && saniye>180){ //bu if bloğu ile kaybetme durumunu kontrol ediyorum eğer oyuncu skoru 5 ten küçükse ve 3 dakika süre dolduysa bu if bloğu çalışacak
+			yazıyazma("KAYBETTİNİZ",alan.width/2-150,240,"#ff0000"); //burada yazıyazma fonksiyonunu çağırıp gerekli parametleri verip oyuncuya kaybettiğini belirtiyorum
+			oyuncu.h=0; //oyun bittiği için oyuncunun dikdörtgeninin kalınlığını ve uzunluğunu 0'lıyorum
+			oyuncu.w=0
+			bilgisayar.h=0;//oyun bittiği için bilgisayarın dikdörtgeninin kalınlığını ve uzunluğunu 0'lıyorum
+			bilgisayar.w=0;
+		}
+			else if(oyuncu.score>4 && saniye<180){ //burada oyuncunun kazanma durumunu kontrol ediyorum eğer skor 5 ve 5 ten fazlaysa ve 3 dakikadan az süre geçtiyse bu kod bloğu çalışacak
+			yazıyazma("KAZANDINIZ",alan.width/2-150,240,"#ff0000"); //burada yazıyazma fonksiyonunu çağırıp gerekli parametleri verip oyuncuya kazandığını belirtiyorum
+			oyuncu.h=0;//oyun bittiği için oyuncunun dikdörtgeninin kalınlığını ve uzunluğunu 0'lıyorum
+			oyuncu.w=0
+			bilgisayar.h=0;//oyun bittiği için bilgisayarın dikdörtgeninin kalınlığını ve uzunluğunu 0'lıyorum
+			bilgisayar.w=0;
+			}
+        }
+
+
+        
+        function hareket(event) { //buradaki hareket fonksiyonu ile oyuncunun dikdörtgeni oluşturup bu dikdörtgenin mouse imlecine bağlı olarak hareket etmesini sağlıyorum.
+			var fareX = event.clientX - alan.offsetLeft;
+        	var fareY = event.clientY - alan.offsetTop;
+			oyuncu.x = fareX; //burada dikdörtgenin x değerini mouse imlecinin x değerine atıyorum
+			oyuncu.y = fareY;//burada dikdörtgenin y değerini mouse imlecinin y değerine atıyorum
+			cizim.beginPath();
+			dikdörtgen(oyuncu.x, oyuncu.y,oyuncu.w,oyuncu.h,oyuncu.renk); //burada dikdörtgen fonksiyonunu çağırıp ona gerekli parametleri veriyorum 
+        	cizim.fill();
+        	cizim.closePath();
+        }
+
+        function ayar(){ //buradaki ayar fonksiyonu ile oyun başlarken kullandığım nesneleri oluşturuyorum.
+			dikdörtgen(0,0,alan.width,alan.height,"#322a60");
+			dikdörtgen(alan.width/2-4,0,8,alan.height,"#eec4c9"); 
+			dikdörtgen(bilgisayar.x,bilgisayar.y,bilgisayar.w,bilgisayar.h,bilgisayar.renk);
+            daire(top_.x,top_.y,top_.r,0,(2*Math.PI),top_.renk);
+			daire(alan.width/2,alan.height/2,15,0,2*Math.PI,"#eec4c9");
+			bosdaire(alan.width/2,alan.height/2,70,0,2*Math.PI,8,"#eec4c9");
+			yazıyazma(oyuncu.score,alan.width/4-70,130,"#ff0000");
+			yazıyazma("SKOR",alan.width/4-100,50,"#ff0000");
+			yazıyazma(saniye,2*alan.width/3,130,"#ff0000");
+			yazıyazma("KALAN SÜRE",2*alan.width/3-100,50,"#ff0000");
+		}
+		
+		
+		setInterval(function(){ //buradaki setinterval fonksiyonu ile gerekli tüm fonksiyonları çağırarak oyunun oynanmasını sağlıyorum 
+			ayar();
+			hareketEt();
+			alan.addEventListener("mousemove",hareket);
+			cizim.beginPath();
+			dikdörtgen(oyuncu.x, oyuncu.y,oyuncu.w,oyuncu.h,oyuncu.renk);
+			cizim.fill();
+           	cizim.closePath();
+        },7); 
+
+	</script>
+	<h4 style="text-shadow:4px 4px 4px #eecfd2; color: #eec4c9"><u>OYUN İLE İLGİLİ BİLGİLER</u></h4> <!--Burada h4 etiketi ile başlığımı oluşturuyorum ,u etiketi ile altını çizgili yapıyorum ve içinde css kodu ile bu yazının rengini değiştiriyorum  -->
+		<p style="color: #eec4c9"><!--Burada p etiketleri arasında oyunla ilgili bilgileri yazıyorum ve css kodu ile yazının rengini değiştirip yazıya gölge ekledim -->
+			Oyunumuz buz hokeyi oyununa benzemektedir.Amacımız mouse imleci ile hareket ettirdiğimiz dikdörtgenimiz ile hareket etmekte olan topa vurup bilgisayarın savunduğu kaleye gol atmaktır.Oyuncunun ya da bilgisayarın dikdörtgeni topa her değdiğinde top hızlanır,oyuncu gol attığında ya da gol yediğinde topun hızı başlangıç hızına  döner ve top orta noktadan başlar.Oyunda gol atmak kadar gol yememek de çok önemlidir çünkü gol yediğimiz    durumlarda bazı dezavantajlı durumlar oluşur:<br>
+			-Eksiye düşmemek kaydıyla skorunuz 1 azalır.<br>
+			-100 birim uzunluğunda olan dikdörtgenimiz 40 birimin altına düşmemek kaydıyla 10 birim kısalır.<br>
+			 Gol attığımız durumda ise :<br>
+			-100 birimden büyük olmamak kaydıyla dikdörtgenimiz 10 birim büyür.<br>
+			-Skorumuz 1 artar.<br>
+		</p>
+	<h4 style="text-shadow:4px 4px 4px #eecfd2; color: #eec4c9"><u>OYUNU NASIL KAZANIRIM?</u></h4><!--Burada h4 etiketi ile başlığımı oluşturuyorum ,u etiketi ile altını çizgili yapıyorum ve içinde css kodu ile bu yazının rengini değiştiriyorum  -->
+		<p style="color: #eec4c9"><!--Burada p etiketleri arasında oyunla ilgili bilgileri yazıyorum ve css kodu ile yazının rengini değiştirip yazıya gölge ekledim -->
+			Ekranda gözüken süre yani 3 dakika sonlanmadan Skorunuz 5'e ulaşırsa oyunu kazanırsınız.
+		</p>
+</body>
+</html>
